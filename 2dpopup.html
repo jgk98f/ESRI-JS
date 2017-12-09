@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Intro to 2D mapping popups</title>
+    <style>
+      html,
+      body,
+      #mappingDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.5/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.5/"></script>
+    <script>
+      require([
+        "esri/tasks/Locator",
+        "esri/Map",
+        "esri/views/MapView",
+        "dojo/domReady!"
+      ], function(Locator, Map, MapView) {
+
+        var locator = new Locator({
+          url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+        });
+
+        var map = new Map({
+          basemap: "streets-navigation-vector"
+        });
+
+        var mappingView = new MapView({
+          container: "mappingDiv",
+          map: map,
+          zoom: 8,
+          center: [280, 40]
+        });
+
+        mappingView.on("click", function(event) {
+          event.stopPropagation();
+
+          var lat = Math.round(event.mapPoint.latitude * 1000) / 1000;
+          var longitude = Math.round(event.mapPoint.longitude * 1000) / 1000;
+
+          mappingView.popup.open({
+            title: "Coordinates: " + "(" + lat + ", " + longitude + ")",
+            location: event.mapPoint
+          });
+        });
+
+        locator.locationToAddress(event.mapPoint).then(function(response) {
+          // If an address is successfully found, show it in the popup's content
+          mappingView.popup.content = response.address;
+        }).otherwise(function(err) {
+          // If the promise fails and no result is found, show a generic message
+          mappingView.popup.content = "No address was found for this location";
+        });
+
+      });
+
+    </script>
+  </head>
+
+  <body>
+    <div id="mappingDiv" />
+  </body>
+
+</html>
